@@ -1,0 +1,8 @@
+add-printerport -name "\\studprint2\M327-ENG"
+
+Add-Printer -Name "M327-ENG" -DriverName "HP Universal Printing PCL 6" -PortName "\\studprint2\M327-ENG"
+
+$printer = Get-CimInstance -Class Win32_Printer -Filter "Name='M327-ENG'"
+Invoke-CimMethod -InputObject $printer -MethodName SetDefaultPrinter
+
+Pause
