@@ -1,0 +1,6 @@
+add-printerport -name "\\studprint2\M330-SEC"
+
+Add-Printer -Name "M330-SEC" -DriverName "HP Universal Printing PCL 6" -PortName "\\studprint2\M330-SEC"
+
+$printer = Get-CimInstance -Class Win32_Printer -Filter "Name='M330-SEC'"
+Invoke-CimMethod -InputObject $printer -MethodName SetDefaultPrinter
