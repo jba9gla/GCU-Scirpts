@@ -1,0 +1,20 @@
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-01\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-02\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-03\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-05\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-06\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-08\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-09\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-10\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-11\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-12\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-13\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-14\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-15\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-16\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-17\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-18\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-19\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-20\c$\Users\Administrator\Desktop\unity /E /R:0
+robocopy \\czc8317p6q\a2018\unity \\lab-c110-04\c$\Users\Administrator\Desktop\unity /E /R:0
+Pause

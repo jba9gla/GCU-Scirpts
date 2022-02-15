@@ -1,0 +1,24 @@
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-02\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-03\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-04\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-05\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-07\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-08\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-09\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-10\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-11\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-12\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-13\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-14\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-15\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-16\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-19\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-20\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-21\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-22\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-23\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-24\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-26\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-27\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ \\lab-m714-04\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+Pause

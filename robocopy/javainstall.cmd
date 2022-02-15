@@ -1,0 +1,25 @@
+psexec.exe \\lab-m714-02 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-03 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-04 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-05 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-06 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-07 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-08 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-09 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-10 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-11 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-12 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-13 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-14 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-15 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-16 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-17 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-18 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-19 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-20 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-22 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-23 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-24 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-26 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+psexec.exe \\lab-m714-27 C:\Users\jba9\Desktop\VMWare\jre-8u181-windows-i586.exe /s -accepteula
+Pause

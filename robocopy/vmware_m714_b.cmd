@@ -1,0 +1,23 @@
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-02\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-03\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-04\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-05\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-07\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-08\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-09\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-10\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-11\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-12\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-13\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-14\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-15\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-16\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-19\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-20\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-21\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-22\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-23\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-24\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-26\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+robocopy \\lab-m714-01\d$\vmware\SEBE-VM-SAS v3.71 \\lab-m714-27\d$\vmware\SEBE-VM-SAS v3.71 /E /R:0
+Pause

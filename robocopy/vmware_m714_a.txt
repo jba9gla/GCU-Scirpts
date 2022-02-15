@@ -1,0 +1,27 @@
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-01\d$\vmware\LinuxMint_17.3_xfce-64bit_labs_16-17\ /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-02\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-03\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-05\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-06\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-08\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-09\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-10\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-11\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-12\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-13\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-14\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-15\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-16\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-17\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-18\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-19\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-20\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-21\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-22\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-23\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-24\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-25\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-26\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-27\d$\Users\jba9\Desktop\unity /E /R:0
+robocopy \\ebeserv1\StaffResources\VMware\VMs-for-2018-19\LinuxMint_17.3_xfce-64bit_labs_16-17 \\lab-m714-04\d$\Users\jba9\Desktop\unity /E /R:0
+Pause

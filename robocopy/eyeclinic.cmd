@@ -1,0 +1,25 @@
+robocopy \\lab-eye-08\c$\VM \\lab-eye-01\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-02\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-03\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-04\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-05\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-06\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-07\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-09\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-10\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-11\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-12\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-13\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-14\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-15\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-16\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-17\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-18\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-19\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-20\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-21\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-22\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-23\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-24\c$\VM /E /R:0
+robocopy \\lab-eye-08\c$\VM \\lab-eye-25\c$\VM /E /R:0
+Pause

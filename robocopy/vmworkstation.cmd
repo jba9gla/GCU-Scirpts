@@ -1,0 +1,24 @@
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-02\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-03\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-04\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-05\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-06\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-07\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-08\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-09\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-10\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-11\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-12\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-13\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-14\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-15\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-16\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-19\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-20\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-21\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-22\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-23\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-24\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-26\c$\Users\jba9\Desktop\VMWare /E /R:0
+robocopy \\lab-m714-01\c$\Users\jba9\Desktop\VMWare \\lab-m714-27\c$\Users\jba9\Desktop\VMWare /E /R:0
+Pause
