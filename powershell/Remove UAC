@@ -1,0 +1,31 @@
+# Remove CodeMeter Runtime Server UAC bypass task
+# Run as Administrator
+
+$TaskName = "CodeMeter Runtime Server"
+$LogPath  = "C:\apps\flood.log"
+
+function Write-Log {
+    param([string]$Message, [string]$Level = "INFO")
+    $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $Entry = "[$Timestamp] [$Level] $Message"
+    Add-Content -Path $LogPath -Value $Entry
+    Write-Host $Entry
+}
+
+# Ensure log directory exists
+if (-not (Test-Path "C:\apps")) {
+    New-Item -ItemType Directory -Path "C:\apps" | Out-Null
+}
+
+Write-Log "Starting CodeMeter UAC bypass removal"
+
+$Task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+
+if ($Task) {
+    Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
+    Write-Log "Task '$TaskName' removed successfully"
+    exit 0
+} else {
+    Write-Log "Task '$TaskName' not found — nothing to remove" -Level "WARN"
+    exit 0
+}
