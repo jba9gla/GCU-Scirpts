@@ -1,0 +1,20 @@
+# Suppress UAC for CodeMeter Runtime Server via Task Scheduler
+# Run this script once as Administrator to set it up
+
+$TaskName = "CodeMeter Runtime Server"
+$ExePath  = "C:\Program Files (x86)\CodeMeter\Runtime\Bin\CodeMeter.exe"
+
+# Remove existing task if present
+Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
+
+# Define the action
+$Action   = New-ScheduledTaskAction -Execute $ExePath
+
+# Run as SYSTEM with highest privileges (bypasses UAC)
+$Principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+
+# Register the task
+Register-ScheduledTask -TaskName $TaskName -Action $Action -Principal $Principal -Force
+
+Write-Host "Task registered. To launch CodeMeter without UAC, run:" -ForegroundColor Green
+Write-Host "  Start-ScheduledTask -TaskName '$TaskName'" -ForegroundColor Cyan
