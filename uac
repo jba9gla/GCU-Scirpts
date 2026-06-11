@@ -3,18 +3,42 @@
 
 $TaskName = "CodeMeter Runtime Server"
 $ExePath  = "C:\Program Files (x86)\CodeMeter\Runtime\Bin\CodeMeter.exe"
+$LogPath  = "C:\apps\flood.log"
+
+function Write-Log {
+    param([string]$Message, [string]$Level = "INFO")
+    $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $Entry = "[$Timestamp] [$Level] $Message"
+    Add-Content -Path $LogPath -Value $Entry
+    Write-Host $Entry
+}
+
+# Ensure log directory exists
+if (-not (Test-Path "C:\apps")) {
+    New-Item -ItemType Directory -Path "C:\apps" | Out-Null
+}
+
+Write-Log "Starting CodeMeter UAC bypass setup"
 
 # Remove existing task if present
 Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
+Write-Log "Removed existing task if present"
 
 # Define the action
-$Action   = New-ScheduledTaskAction -Execute $ExePath
+$Action = New-ScheduledTaskAction -Execute $ExePath
 
 # Run as SYSTEM with highest privileges (bypasses UAC)
 $Principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
 
 # Register the task
-Register-ScheduledTask -TaskName $TaskName -Action $Action -Principal $Principal -Force
+$Result = Register-ScheduledTask -TaskName $TaskName -Action $Action -Principal $Principal -Force -ErrorAction SilentlyContinue
 
-Write-Host "Task registered. To launch CodeMeter without UAC, run:" -ForegroundColor Green
-Write-Host "  Start-ScheduledTask -TaskName '$TaskName'" -ForegroundColor Cyan
+if ($Result) {
+    Write-Log "Task '$TaskName' registered successfully"
+    Write-Host "To launch CodeMeter without UAC, run:" -ForegroundColor Cyan
+    Write-Host "  Start-ScheduledTask -TaskName '$TaskName'" -ForegroundColor Cyan
+    exit 0
+} else {
+    Write-Log "Failed to register task '$TaskName'" -Level "ERROR"
+    exit 1
+}
