@@ -1,6 +1,38 @@
 # ============================================================
 # GCU - Create Hyper-V VM Script
 # Creates a Windows 11 Pro VM with unattended install
+#
+# ── BEFORE RUNNING THIS SCRIPT ──────────────────────────────
+# 1. Set execution policy:
+#    Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser -Force
+#
+# 2. Create folder structure:
+#    New-Item -ItemType Directory -Path "C:\HyperV\autounattend" -Force
+#    New-Item -ItemType Directory -Path "C:\HyperV\VMs" -Force
+#    New-Item -ItemType Directory -Path "C:\HyperV\WinISO" -Force
+#
+# 3. Save these files to C:\HyperV\autounattend\:
+#    - autounattend.xml
+#    - build-iso.ps1
+#    - createhyper-v.ps1
+#
+# 4. Install Windows ADK (Deployment Tools only):
+#    https://aka.ms/adk
+#
+# 5. Confirm Windows ISO is on G:
+#    dir G:\
+#    Expected: Win11_25H2_EnglishInternational_x64_v2.iso
+#
+# 6. Build the unattended ISO first:
+#    C:\HyperV\autounattend\build-iso.ps1
+#    Wait for: Done. ISO saved to C:\HyperV\Win11_unattended.iso
+#
+# 7. Then run this script:
+#    C:\HyperV\autounattend\createhyper-v.ps1
+#
+# 8. Open Hyper-V Manager and connect to AppsAnywhere
+#    Once at the desktop take a clean checkpoint:
+#    Checkpoint-VM -Name "AppsAnywhere" -SnapshotName "Clean-PostInstall"
 # ============================================================
 
 # ── Enable Hyper-V if not already installed ──────────────────
