@@ -4,6 +4,8 @@
 # Log: C:\CaptureLog\pre-capture.log
 # ============================================================
 
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser -Force
+
 $logPath = "C:\CaptureLog"
 $logFile = "$logPath\pre-capture.log"
 
@@ -22,10 +24,10 @@ Write-Log "=========================================="
 
 # ── Windows Update ──────────────────────────────────────────
 $updateServices = @(
-    "wuauserv",    # Windows Update
-    "UsoSvc",      # Update Orchestrator
-    "WaaSMedicSvc",# Windows Update Medic
-    "BITS"         # Background Intelligent Transfer
+    "wuauserv",
+    "UsoSvc",
+    "WaaSMedicSvc",
+    "BITS"
 )
 
 foreach ($svc in $updateServices) {
@@ -43,8 +45,9 @@ foreach ($svc in $updateServices) {
 
 # ── Windows Store ────────────────────────────────────────────
 $storeServices = @(
-    "InstallService",  # Microsoft Store Install Service
-    "StorSvc"          # Storage Service
+    "InstallService",
+    "StorSvc",
+    "WSService"        # Windows Store Service
 )
 
 foreach ($svc in $storeServices) {
@@ -60,16 +63,54 @@ foreach ($svc in $storeServices) {
     }
 }
 
-# Kill Store process
-Get-Process -Name "WinStore.App" -ErrorAction SilentlyContinue | ForEach-Object {
-    $_.Kill()
-    Write-Log "KILLED PROCESS: WinStore.App"
+$storeProcesses = @(
+    "WinStore.App",
+    "Microsoft.WindowsStore"
+)
+
+foreach ($proc in $storeProcesses) {
+    Get-Process -Name $proc -ErrorAction SilentlyContinue | ForEach-Object {
+        $_.Kill()
+        Write-Log "KILLED PROCESS: $proc"
+    }
+}
+
+# ── OneDrive ─────────────────────────────────────────────────
+$oneDriveServices = @(
+    "OneSyncSvc",      # OneDrive Sync Service
+    "FileSyncHelper"   # OneDrive File Co-authoring
+)
+
+foreach ($svc in $oneDriveServices) {
+    try {
+        $s = Get-Service -Name $svc -ErrorAction SilentlyContinue
+        if ($s) {
+            Set-Service -Name $svc -StartupType Disabled -ErrorAction SilentlyContinue
+            Stop-Service -Name $svc -Force -ErrorAction SilentlyContinue
+            Write-Log "STOPPED: $svc"
+        }
+    } catch {
+        Write-Log "SKIPPED: $svc - $_"
+    }
+}
+
+$oneDriveProcesses = @(
+    "OneDrive",
+    "OneDriveStandaloneUpdater",
+    "FileCoAuth"       # OneDrive File Co-authoring executable
+)
+
+foreach ($proc in $oneDriveProcesses) {
+    Get-Process -Name $proc -ErrorAction SilentlyContinue | ForEach-Object {
+        $_.Kill()
+        Write-Log "KILLED PROCESS: $proc"
+    }
 }
 
 # ── Microsoft 365 / Office ───────────────────────────────────
 $officeServices = @(
-    "ClickToRunSvc",   # Office Click-to-Run
-    "OfficeSvcManager" # Office Service Manager
+    "ClickToRunSvc",
+    "OfficeSvcManager"
 )
 
 foreach ($svc in $officeServices) {
@@ -87,7 +128,7 @@ foreach ($svc in $officeServices) {
 
 $officeProcesses = @(
     "WINWORD", "EXCEL", "POWERPNT", "OUTLOOK", "ONENOTE",
-    "TEAMS", "ms-teams", "OneDrive", "OfficeClickToRun",
+    "TEAMS", "ms-teams", "OfficeClickToRun",
     "AppVShNotify", "officec2rclient"
 )
 
@@ -110,7 +151,7 @@ foreach ($proc in $browserProcesses) {
     }
 }
 
-# Disable Edge update services
+# ── Microsoft Edge Update ────────────────────────────────────
 $edgeServices = @(
     "edgeupdate",
     "edgeupdatem",
@@ -130,7 +171,19 @@ foreach ($svc in $edgeServices) {
     }
 }
 
-# Disable Chrome update services
+$edgeProcesses = @(
+    "MicrosoftEdgeUpdate",
+    "MicrosoftEdge"
+)
+
+foreach ($proc in $edgeProcesses) {
+    Get-Process -Name $proc -ErrorAction SilentlyContinue | ForEach-Object {
+        $_.Kill()
+        Write-Log "KILLED PROCESS: $proc"
+    }
+}
+
+# ── Chrome Update ────────────────────────────────────────────
 $chromeServices = @(
     "gupdate",
     "gupdatem"
@@ -149,13 +202,37 @@ foreach ($svc in $chromeServices) {
     }
 }
 
+# ── Windows Widgets ──────────────────────────────────────────
+$widgetProcesses = @(
+    "Widgets",
+    "WidgetService"
+)
+
+foreach ($proc in $widgetProcesses) {
+    Get-Process -Name $proc -ErrorAction SilentlyContinue | ForEach-Object {
+        $_.Kill()
+        Write-Log "KILLED PROCESS: $proc"
+    }
+}
+
+try {
+    $s = Get-Service -Name "WpnService" -ErrorAction SilentlyContinue
+    if ($s) {
+        Set-Service -Name "WpnService" -StartupType Disabled -ErrorAction SilentlyContinue
+        Stop-Service -Name "WpnService" -Force -ErrorAction SilentlyContinue
+        Write-Log "STOPPED: WpnService (Windows Push Notifications - used by Widgets)"
+    }
+} catch {
+    Write-Log "SKIPPED: WpnService - $_"
+}
+
 # ── Telemetry and Diagnostics ────────────────────────────────
 $telemetryServices = @(
-    "DiagTrack",           # Connected User Experiences and Telemetry
-    "dmwappushservice",    # WAP Push Message Routing
-    "PcaSvc",              # Program Compatibility Assistant
-    "WerSvc",              # Windows Error Reporting
-    "wercplsupport"        # Problem Reports Control Panel
+    "DiagTrack",
+    "dmwappushservice",
+    "PcaSvc",
+    "WerSvc",
+    "wercplsupport"
 )
 
 foreach ($svc in $telemetryServices) {
@@ -172,27 +249,18 @@ foreach ($svc in $telemetryServices) {
 }
 
 # ── Search and Indexing ──────────────────────────────────────
-$indexServices = @(
-    "WSearch"  # Windows Search
-)
-
-foreach ($svc in $indexServices) {
-    try {
-        $s = Get-Service -Name $svc -ErrorAction SilentlyContinue
-        if ($s) {
-            Set-Service -Name $svc -StartupType Disabled -ErrorAction SilentlyContinue
-            Stop-Service -Name $svc -Force -ErrorAction SilentlyContinue
-            Write-Log "STOPPED: $svc"
-        }
-    } catch {
-        Write-Log "SKIPPED: $svc - $_"
-    }
+try {
+    Set-Service -Name "WSearch" -StartupType Disabled -ErrorAction SilentlyContinue
+    Stop-Service -Name "WSearch" -Force -ErrorAction SilentlyContinue
+    Write-Log "STOPPED: WSearch"
+} catch {
+    Write-Log "SKIPPED: WSearch - $_"
 }
 
-# ── Security / Antivirus ─────────────────────────────────────
+# ── Security ─────────────────────────────────────────────────
 $securityServices = @(
-    "SecurityHealthService", # Windows Security Health
-    "wscsvc"                 # Security Centre
+    "SecurityHealthService",
+    "wscsvc"
 )
 
 foreach ($svc in $securityServices) {
@@ -221,7 +289,8 @@ $tasks = @(
     "\Microsoft\Windows\PI\Sqm-Tasks",
     "\Microsoft\Windows\Power Efficiency Diagnostics\AnalyzeSystem",
     "\Microsoft\Windows\Shell\FamilySafetyMonitor",
-    "\Microsoft\Windows\Shell\FamilySafetyRefresh"
+    "\Microsoft\Windows\Shell\FamilySafetyRefresh",
+    "\Microsoft\Windows\Widgets\UserSessionMessageBroker"
 )
 
 foreach ($task in $tasks) {
@@ -233,10 +302,10 @@ foreach ($task in $tasks) {
     }
 }
 
-# ── Disable Network Location Awareness changes ───────────────
+# ── Network Location Awareness ───────────────────────────────
 try {
     Stop-Service -Name "NlaSvc" -Force -ErrorAction SilentlyContinue
-    Write-Log "STOPPED: NlaSvc (Network Location Awareness)"
+    Write-Log "STOPPED: NlaSvc"
 } catch {
     Write-Log "SKIPPED: NlaSvc - $_"
 }
