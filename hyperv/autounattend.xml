@@ -3,7 +3,7 @@
           xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-  <!-- ═══ PHASE 1: Windows PE (disk setup, edition, locale) ═══ -->
+  <!-- ═══ PHASE 1: Windows PE (disk setup, edition, locale, drivers) ═══ -->
   <settings pass="windowsPE">
 
     <component name="Microsoft-Windows-International-Core-WinPE"
@@ -13,7 +13,7 @@
       <SetupUILanguage>
         <UILanguage>en-GB</UILanguage>
       </SetupUILanguage>
-      <InputLocale>en-GB</InputLocale>
+      <InputLocale>0809:00000809</InputLocale>
       <SystemLocale>en-GB</SystemLocale>
       <UILanguage>en-GB</UILanguage>
       <UserLocale>en-GB</UserLocale>
@@ -32,7 +32,6 @@
         </ProductKey>
       </UserData>
 
-      <!-- Select Windows 11 Pro by edition ID -->
       <ImageInstall>
         <OSImage>
           <InstallFrom>
@@ -48,7 +47,6 @@
         </OSImage>
       </ImageInstall>
 
-      <!-- Disk layout: EFI + MSR + Windows -->
       <DiskConfiguration>
         <Disk wcm:action="add">
           <DiskID>0</DiskID>
@@ -88,22 +86,54 @@
         </Disk>
       </DiskConfiguration>
 
+      <DriverPaths>
+        <PathAndCredentials wcm:action="add" wcm:keyValue="1">
+          <Path>D:\Drivers\Ethernet</Path>
+        </PathAndCredentials>
+        <PathAndCredentials wcm:action="add" wcm:keyValue="2">
+          <Path>D:\Drivers\Graphics</Path>
+        </PathAndCredentials>
+      </DriverPaths>
+
     </component>
   </settings>
 
-  <!-- ═══ PHASE 2: Specialize (computer name, timezone) ═══ -->
+  <!-- ═══ PHASE 2: Specialize (locale only) ═══ -->
   <settings pass="specialize">
+
+    <component name="Microsoft-Windows-International-Core"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral" versionScope="nonSxS">
+      <InputLocale>0809:00000809</InputLocale>
+      <SystemLocale>en-GB</SystemLocale>
+      <UILanguage>en-GB</UILanguage>
+      <UserLocale>en-GB</UserLocale>
+    </component>
+
     <component name="Microsoft-Windows-Shell-Setup"
                processorArchitecture="amd64"
                publicKeyToken="31bf3856ad364e35"
                language="neutral" versionScope="nonSxS">
-      <ComputerName>appsanywhere</ComputerName>
+      <ComputerName>*</ComputerName>
       <TimeZone>GMT Standard Time</TimeZone>
     </component>
+
   </settings>
 
-  <!-- ═══ PHASE 3: OOBE (local account, skip Microsoft account) ═══ -->
+  <!-- ═══ PHASE 3: OOBE (local account, skip Microsoft account, first logon commands) ═══ -->
   <settings pass="oobeSystem">
+
+    <component name="Microsoft-Windows-International-Core"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral" versionScope="nonSxS">
+      <InputLocale>0809:00000809</InputLocale>
+      <SystemLocale>en-GB</SystemLocale>
+      <UILanguage>en-GB</UILanguage>
+      <UserLocale>en-GB</UserLocale>
+    </component>
+
     <component name="Microsoft-Windows-Shell-Setup"
                processorArchitecture="amd64"
                publicKeyToken="31bf3856ad364e35"
@@ -142,6 +172,103 @@
           <PlainText>true</PlainText>
         </Password>
       </AutoLogon>
+
+      <FirstLogonCommands>
+
+        <!-- Rename computer to BIOS serial number (max 15 chars) -->
+        <SynchronousCommand wcm:action="add">
+          <Order>1</Order>
+          <CommandLine>cmd /c powershell -Command "Rename-Computer -NewName ((Get-WmiObject Win32_BIOS).SerialNumber.Trim().Substring(0, [Math]::Min(15, (Get-WmiObject Win32_BIOS).SerialNumber.Trim().Length))) -Force"</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+
+        <!-- Remove en-US language capabilities -->
+        <SynchronousCommand wcm:action="add">
+          <Order>2</Order>
+          <CommandLine>cmd /c dism /online /remove-capability /capabilityname:Language.Basic~~~en-US~0.0.1.0</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>3</Order>
+          <CommandLine>cmd /c dism /online /remove-capability /capabilityname:Language.OCR~~~en-US~0.0.1.0</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>4</Order>
+          <CommandLine>cmd /c dism /online /remove-capability /capabilityname:Language.Handwriting~~~en-US~0.0.1.0</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>5</Order>
+          <CommandLine>cmd /c dism /online /remove-capability /capabilityname:Language.TextToSpeech~~~en-US~0.0.1.0</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>6</Order>
+          <CommandLine>cmd /c dism /online /remove-capability /capabilityname:Language.Speech~~~en-US~0.0.1.0</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+
+        <!-- Set UK keyboard and language only -->
+        <SynchronousCommand wcm:action="add">
+          <Order>7</Order>
+          <CommandLine>cmd /c powershell -Command "Set-WinUserLanguageList -LanguageList en-GB -Force"</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>8</Order>
+          <CommandLine>cmd /c powershell -Command "Set-WinDefaultInputMethodOverride -InputTip '0809:00000809'"</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+
+        <!-- Disable Windows Update automatic downloads and installs -->
+        <SynchronousCommand wcm:action="add">
+          <Order>9</Order>
+          <CommandLine>cmd /c reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /f</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>10</Order>
+          <CommandLine>cmd /c reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v NoAutoUpdate /t REG_DWORD /d 1 /f</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+
+        <!-- Create open WiFi profile for "apple" network and connect -->
+        <SynchronousCommand wcm:action="add">
+          <Order>11</Order>
+          <CommandLine>cmd /c powershell -Command "$xml = '&lt;?xml version=""1.0""?&gt;&lt;WLANProfile xmlns=""http://www.microsoft.com/networking/WLAN/profile/v1""&gt;&lt;name&gt;apple&lt;/name&gt;&lt;SSIDConfig&gt;&lt;SSID&gt;&lt;name&gt;apple&lt;/name&gt;&lt;/SSID&gt;&lt;/SSIDConfig&gt;&lt;connectionType&gt;ESS&lt;/connectionType&gt;&lt;connectionMode&gt;auto&lt;/connectionMode&gt;&lt;MSM&gt;&lt;security&gt;&lt;authEncryption&gt;&lt;authentication&gt;open&lt;/authentication&gt;&lt;encryption&gt;none&lt;/encryption&gt;&lt;/authEncryption&gt;&lt;/security&gt;&lt;/MSM&gt;&lt;/WLANProfile&gt;'; $xml | Out-File -FilePath C:\Windows\Temp\apple-wifi.xml -Encoding UTF8; netsh wlan add profile filename=C:\Windows\Temp\apple-wifi.xml; netsh wlan connect name=apple"</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+
+        <!-- Wait for network connection -->
+        <SynchronousCommand wcm:action="add">
+          <Order>12</Order>
+          <CommandLine>cmd /c timeout /t 20 /nobreak</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+
+        <!-- Install Chrome via winget -->
+        <SynchronousCommand wcm:action="add">
+          <Order>13</Order>
+          <CommandLine>cmd /c winget install --id Google.Chrome --silent --accept-package-agreements --accept-source-agreements</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+
+        <!-- Create Cloudpaging Studio desktop shortcut -->
+        <SynchronousCommand wcm:action="add">
+          <Order>14</Order>
+          <CommandLine>cmd /c powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('C:\Users\apps\Desktop\Install Cloudpaging Studio.lnk'); $s.TargetPath = 'http://jacb.co.uk/files/cloudpaging-studio-setup-x64-9.5.0.3910.exe'; $s.Save()"</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+
+        <!-- Restart to apply all changes -->
+        <SynchronousCommand wcm:action="add">
+          <Order>15</Order>
+          <CommandLine>shutdown /r /t 10 /c "Restarting to apply all changes"</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+
+      </FirstLogonCommands>
 
     </component>
 
