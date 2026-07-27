@@ -261,9 +261,26 @@
           <RequiresUserInput>false</RequiresUserInput>
         </SynchronousCommand>
 
-        <!-- Restart to apply all changes -->
+        <!-- Suppress Microsoft Edge first run wizard -->
         <SynchronousCommand wcm:action="add">
           <Order>15</Order>
+          <CommandLine>cmd /c reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "HideFirstRunExperience" /t REG_DWORD /d 1 /f</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>16</Order>
+          <CommandLine>cmd /c reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "ImportAutofillFormData" /t REG_DWORD /d 0 /f</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>17</Order>
+          <CommandLine>cmd /c reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "ImportBrowserSettings" /t REG_DWORD /d 0 /f</CommandLine>
+          <RequiresUserInput>false</RequiresUserInput>
+        </SynchronousCommand>
+
+        <!-- Restart to apply all changes -->
+        <SynchronousCommand wcm:action="add">
+          <Order>18</Order>
           <CommandLine>shutdown /r /t 10 /c "Restarting to apply all changes"</CommandLine>
           <RequiresUserInput>false</RequiresUserInput>
         </SynchronousCommand>
