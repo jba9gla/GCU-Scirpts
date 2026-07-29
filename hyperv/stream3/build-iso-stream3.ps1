@@ -26,7 +26,7 @@
 # 7. Then run createhyper-v-stream3.ps1 to create the VM
 # ============================================================
 
-$sourceISO  = "G:\Win11_25H2_EnglishInternational_x64_v2.iso"
+$sourceISO = "G:\Win11_24H2_EnglishInternational_x64.iso"
 $workDir    = "C:\HyperV\WinISO"
 $outputISO  = "C:\HyperV\stream3\Win11_stream3.iso"
 $xmlSource  = "$PSScriptRoot\autounattend.xml"
