@@ -9,6 +9,7 @@
 # 2. Create folder structure:
 #    New-Item -ItemType Directory -Path "C:\HyperV\stream3" -Force
 #    New-Item -ItemType Directory -Path "C:\HyperV\WinISO" -Force
+#    New-Item -ItemType Directory -Path "C:\HyperV\windows_iso" -Force
 #
 # 3. Save these files to C:\HyperV\stream3\:
 #    - autounattend.xml (saved as UTF-8 without BOM in VS Code)
@@ -17,13 +18,14 @@
 # 4. Install Windows ADK (Deployment Tools only):
 #    https://aka.ms/adk
 #
-# 5. Confirm Windows ISO path:
-#    dir C:\HyperV\windows_iso\
+# 5. Save your Windows 11 ISO to C:\HyperV\windows_iso\
+#    Update $sourceISO below to match your ISO filename
 #
 # 6. Run this script:
 #    C:\HyperV\stream3\deploy-stream3.ps1
 #
 # 7. Open Hyper-V Manager and connect to Win11-Stream3-GitHub
+#    Click through language and keyboard screens when prompted
 #    Once at the desktop take a clean checkpoint:
 #    Checkpoint-VM -Name "Win11-Stream3-GitHub" -SnapshotName "Clean-PostInstall"
 # ============================================================
@@ -41,6 +43,7 @@ if ($hyperv.State -ne "Enabled") {
 }
 
 # ── Variables ────────────────────────────────────────────────
+# UPDATE THIS LINE TO MATCH YOUR ISO FILENAME
 $sourceISO  = "C:\HyperV\windows_iso\SW_DVD9_Win_Pro_11_24H2.12_64BIT_English_Pro_Ent_EDU_N_MLF_X24-18358.iso"
 $workDir    = "C:\HyperV\WinISO"
 $outputISO  = "C:\HyperV\stream3\Win11_stream3.iso"
@@ -57,19 +60,32 @@ if (-not (Test-Path $sourceISO)) {
     exit
 }
 
-# ── Clean up previous build if exists ───────────────────────
-Write-Host "Cleaning up previous build..." -ForegroundColor Cyan
-Get-DiskImage -ImagePath $outputISO -ErrorAction SilentlyContinue | Dismount-DiskImage -ErrorAction SilentlyContinue
-Remove-Item $outputISO -Force -ErrorAction SilentlyContinue
-Remove-Item $workDir -Recurse -Force -ErrorAction SilentlyContinue
+# ── Check oscdimg exists ─────────────────────────────────────
+if (-not (Test-Path $oscdimg)) {
+    Write-Host "ERROR: oscdimg.exe not found. Please install Windows ADK (Deployment Tools only):" -ForegroundColor Red
+    Write-Host "https://aka.ms/adk" -ForegroundColor Yellow
+    exit
+}
 
-# ── Clean up existing VM if exists ──────────────────────────
+# ── Clean up previous VM if exists ──────────────────────────
 if (Get-VM -Name $vmName -ErrorAction SilentlyContinue) {
     Write-Host "Removing existing VM..." -ForegroundColor Yellow
     Stop-VM -VMName $vmName -TurnOff -Force -ErrorAction SilentlyContinue
-    Remove-VM -VMName $vmName -Force
-    Remove-Item "C:\HyperV\VMs\$vmName" -Recurse -Force -ErrorAction SilentlyContinue
+    Get-VMSnapshot -VMName $vmName -ErrorAction SilentlyContinue | Remove-VMSnapshot -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 5
+    Remove-VM -VMName $vmName -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 5
 }
+
+# ── Clean up previous files ──────────────────────────────────
+Write-Host "Cleaning up previous build files..." -ForegroundColor Cyan
+Get-DiskImage -ImagePath $outputISO -ErrorAction SilentlyContinue | Dismount-DiskImage -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 2
+Remove-Item $vhdPath -Force -ErrorAction SilentlyContinue
+Remove-Item "C:\HyperV\VMs\$vmName" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item $outputISO -Force -ErrorAction SilentlyContinue
+Remove-Item $workDir -Recurse -Force -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 2
 
 # ── Build ISO ────────────────────────────────────────────────
 Write-Host "Mounting Windows ISO..." -ForegroundColor Cyan
