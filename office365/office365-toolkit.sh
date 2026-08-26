@@ -375,17 +375,43 @@ verify_removal_status() {
 # FUNCTION: Reinstall Office 365
 # ============================================================
 reinstall_office() {
-    log "--- Launching Microsoft 365 reinstall ---"
-    echo ""
-    echo "  This will open the official Microsoft 365 apps download page in your browser."
-    echo "  Sign in with your Microsoft 365 account there to download and install Office."
-    echo ""
-    read -rp "  Press Enter to open the download page (or Ctrl+C to cancel)... "
+    log "--- Reinstalling Microsoft 365 ---"
+    local DOWNLOAD_URL="https://go.microsoft.com/fwlink/?linkid=525133"
+    local TMP_INSTALL_DIR="/private/tmp/office-reinstall"
+    local PKG_PATH="${TMP_INSTALL_DIR}/Microsoft_Office_installer.pkg"
 
-    local DOWNLOAD_URL="https://www.microsoft.com/en-us/microsoft-365/apps"
-    sudo -u "${LOGGED_IN_USER}" open "${DOWNLOAD_URL}"
-    log "Opened ${DOWNLOAD_URL} for ${LOGGED_IN_USER} to sign in and download Office."
-    log "Once installed, open any Office app and sign in with the Microsoft 365 account to activate."
+    echo ""
+    echo "  This will download the official Microsoft 365 installer (full suite,"
+    echo "  ~2GB+) directly from Microsoft's CDN and install it silently."
+    echo "  You will need to sign in the first time you open an Office app."
+    echo ""
+    read -rp "  Press Enter to begin, or Ctrl+C to cancel... "
+
+    mkdir -p "${TMP_INSTALL_DIR}"
+    log "Downloading Microsoft 365 installer from ${DOWNLOAD_URL}..."
+    if ! curl -L "${DOWNLOAD_URL}" --output "${PKG_PATH}"; then
+        log "ERROR: Download failed. Check network access to go.microsoft.com / officecdn CDN."
+        rm -rf "${TMP_INSTALL_DIR}"
+        return 1
+    fi
+
+    if [ ! -s "${PKG_PATH}" ]; then
+        log "ERROR: Downloaded file is empty or missing. Aborting install."
+        rm -rf "${TMP_INSTALL_DIR}"
+        return 1
+    fi
+
+    log "Download complete ($(du -h "${PKG_PATH}" | cut -f1)). Installing..."
+    if installer -pkg "${PKG_PATH}" -target /; then
+        log "Microsoft 365 installed successfully."
+        log "Open any Office app (e.g. Word) and sign in with the Microsoft 365 account to activate."
+    else
+        log "ERROR: Installer exited with a non-zero status. Check the log above for details."
+        rm -rf "${TMP_INSTALL_DIR}"
+        return 1
+    fi
+
+    rm -rf "${TMP_INSTALL_DIR}"
 }
 
 # ============================================================
@@ -401,7 +427,8 @@ while true; do
     echo " 3) Full clean - remove license, uninstall Office, AND clean login/auth remnants"
     echo " 4) Login/auth remnants only - clean (skip license/uninstall)"
     echo " 5) Verify removal status - confirm Office and license are fully gone"
-    echo " 6) Reinstall Microsoft 365 - open official download page and sign in"
+    echo " 6) Reinstall Microsoft 365 - direct download + silent install"
+    echo " 7) Remove license only (keep apps installed) - lets user sign in again"
     echo " 0) Exit"
     echo "=========================================="
     read -rp "Choose an option: " CHOICE
@@ -437,6 +464,11 @@ while true; do
         6)
             reinstall_office
             log "--- Action complete ---"
+            ;;
+        7)
+            remove_license
+            log "--- Action complete ---"
+            log "License removed - apps are still installed. Open any Office app and sign in with the account you want to use."
             ;;
         0)
             log "=== Exiting toolkit. Log saved at: ${LOG_FILE} ==="
