@@ -32,6 +32,7 @@ LOG_FILE="${LOG_DIR}/office-toolkit-${TIMESTAMP}.log"
 TMP_DIR="/private/tmp/office-unlicense"
 UNLICENSE_URL="https://raw.githubusercontent.com/pbowden-msft/Unlicense/master/Unlicense"
 UNLICENSE_BIN="${TMP_DIR}/Unlicense"
+PKG_CACHE_DIR="/Library/Application Support/OfficeToolkitCache"
 
 mkdir -p "${LOG_DIR}"
 exec > >(tee -a "${LOG_FILE}") 2>&1
@@ -304,6 +305,71 @@ check_login_remnants() {
 }
 
 # ============================================================
+# FUNCTION: Clear Safari Microsoft/Office web session data
+# ============================================================
+clear_safari_microsoft_session() {
+    log "--- Clearing Safari Microsoft/Office website data ---"
+
+    echo ""
+    echo "  This removes Safari's saved cookies/website data for Microsoft"
+    echo "  and Office domains, so apps can no longer silently reuse an"
+    echo "  existing web sign-in session."
+    echo "  Safari will be closed automatically if it's running."
+    echo ""
+    read -rp "  Press Enter to continue, or Ctrl+C to cancel... "
+
+    log "Closing Safari..."
+    sudo -u "${LOGGED_IN_USER}" osascript -e 'tell application "Safari" to quit' 2>/dev/null
+    sleep 2
+    pkill -x Safari 2>/dev/null
+
+    local FOUND_ANY=false
+
+    # Safari's per-origin storage under the app container (modern macOS)
+    local SAFARI_CONTAINER="${USER_HOME}/Library/Containers/com.apple.Safari/Data/Library/Cookies"
+    if [ -d "${SAFARI_CONTAINER}" ]; then
+        log "Checking Safari container cookie storage..."
+        if [ -f "${SAFARI_CONTAINER}/Cookies.binarycookies" ]; then
+            FOUND_ANY=true
+            log "Found Safari cookies file. Note: this file stores all sites' cookies together,"
+            log "so it cannot be selectively edited by script - only fully cleared."
+            read -rp "  Clear ALL Safari cookies (not just Microsoft)? [y/N]: " CLEAR_ALL
+            if [[ "${CLEAR_ALL}" =~ ^[Yy] ]]; then
+                rm -f "${SAFARI_CONTAINER}/Cookies.binarycookies"
+                log "Removed Safari cookies file. All sites will need to sign in again."
+            else
+                log "Skipped - cookie file left untouched."
+            fi
+        fi
+    fi
+
+    # WebKit per-origin local storage / IndexedDB - these ARE per-domain and safe to target
+    local WEBKIT_STORAGE="${USER_HOME}/Library/Containers/com.apple.Safari/Data/Library/WebKit/WebsiteData"
+    if [ -d "${WEBKIT_STORAGE}" ]; then
+        log "Checking per-domain WebKit website data..."
+        local MS_DOMAINS=("microsoft.com" "microsoftonline.com" "office.com" "office365.com" "live.com" "outlook.com")
+        for domain_dir in "${WEBKIT_STORAGE}"/*/; do
+            for domain in "${MS_DOMAINS[@]}"; do
+                if [[ "${domain_dir}" == *"${domain}"* ]]; then
+                    FOUND_ANY=true
+                    log "Removing website data: ${domain_dir}"
+                    rm -rf "${domain_dir}"
+                fi
+            done
+        done
+    fi
+
+    if [ "$FOUND_ANY" = false ]; then
+        log "No Microsoft/Office Safari website data found (or Safari's sandbox prevented direct access - Full Disk Access for Terminal may be required)."
+    else
+        log "Safari Microsoft/Office session data cleared."
+    fi
+
+    log "You may also want to manually check: Safari > Settings > Passwords, and remove any saved Microsoft/GCU credentials."
+    log "Next Outlook/Office launch should now prompt for sign-in instead of reusing a session."
+}
+
+# ============================================================
 # FUNCTION: Verify removal status (confirms apps, license, containers gone)
 # ============================================================
 verify_removal_status() {
@@ -374,102 +440,290 @@ verify_removal_status() {
 # ============================================================
 # FUNCTION: Reinstall Office 365
 # ============================================================
+# ============================================================
+# FUNCTION: Get version of a downloaded .pkg
+# ============================================================
+get_pkg_version() {
+    local pkg_path="$1"
+    local version
+    version=$(installer -pkginfo -pkg "${pkg_path}" 2>/dev/null | head -1 | awk '{print $NF}')
+    if [ -z "${version}" ]; then
+        version="unknown"
+    fi
+    echo "${version}"
+}
+
+# ============================================================
+# FUNCTION: Download a pkg with caching (skip re-download if cached copy exists)
+# Args: $1 = download URL, $2 = cache filename, $3 = friendly name for messages
+# Sets: DOWNLOADED_PKG_PATH on success
+# ============================================================
+download_pkg_cached() {
+    local url="$1"
+    local cache_filename="$2"
+    local friendly_name="$3"
+    local cache_path="${PKG_CACHE_DIR}/${cache_filename}"
+
+    mkdir -p "${PKG_CACHE_DIR}"
+    DOWNLOADED_PKG_PATH=""
+
+    if [ -f "${cache_path}" ]; then
+        local cached_version
+        cached_version=$(get_pkg_version "${cache_path}")
+        local cache_date
+        cache_date=$(stat -f "%Sm" -t "%Y-%m-%d" "${cache_path}")
+        echo ""
+        log "Found cached ${friendly_name} installer: version ${cached_version}, downloaded ${cache_date}"
+        read -rp "  Use cached copy? [Y/n] (n = re-download latest): " USE_CACHE
+        if [[ ! "${USE_CACHE}" =~ ^[Nn] ]]; then
+            log "Using cached ${friendly_name} installer (v${cached_version})."
+            DOWNLOADED_PKG_PATH="${cache_path}"
+            return 0
+        else
+            log "Re-downloading ${friendly_name} as requested..."
+            rm -f "${cache_path}"
+        fi
+    fi
+
+    log "Downloading ${friendly_name} installer from ${url}..."
+    if ! curl -L "${url}" --output "${cache_path}"; then
+        log "ERROR: Download failed. Check network access."
+        rm -f "${cache_path}"
+        return 1
+    fi
+
+    if [ ! -s "${cache_path}" ]; then
+        log "ERROR: Downloaded file is empty or missing."
+        rm -f "${cache_path}"
+        return 1
+    fi
+
+    local new_version
+    new_version=$(get_pkg_version "${cache_path}")
+    log "Download complete ($(du -h "${cache_path}" | cut -f1)), version ${new_version}. Cached at ${cache_path}"
+    DOWNLOADED_PKG_PATH="${cache_path}"
+    return 0
+}
+
+# ============================================================
+# FUNCTION: Clear the pkg cache
+# ============================================================
+clear_pkg_cache() {
+    log "--- Clearing installer cache ---"
+    if [ ! -d "${PKG_CACHE_DIR}" ] || [ -z "$(ls -A "${PKG_CACHE_DIR}" 2>/dev/null)" ]; then
+        log "Cache is already empty. Nothing to remove."
+        return 0
+    fi
+
+    echo ""
+    echo "  Cached installers:"
+    ls -lh "${PKG_CACHE_DIR}" | tail -n +2 | awk '{print "    "$9" ("$5")"}'
+    echo ""
+    read -rp "  Remove all cached installers? [y/N]: " CONFIRM
+    if [[ "${CONFIRM}" =~ ^[Yy] ]]; then
+        rm -rf "${PKG_CACHE_DIR:?}"/*
+        log "Installer cache cleared."
+    else
+        log "Cache left untouched."
+    fi
+}
+
+# ============================================================
+# FUNCTION: Install Microsoft Teams (standalone)
+# ============================================================
+install_teams_standalone() {
+    log "--- Installing Microsoft Teams (standalone) ---"
+    local DOWNLOAD_URL="https://go.microsoft.com/fwlink/?linkid=869428"
+
+    echo ""
+    echo "  This will install the official standalone Microsoft Teams installer,"
+    echo "  using a cached copy if one already exists (checked against a fresh"
+    echo "  download only if you choose to)."
+    echo "  You will need to sign in the first time you open Teams."
+    echo ""
+    read -rp "  Press Enter to begin, or Ctrl+C to cancel... "
+
+    if ! download_pkg_cached "${DOWNLOAD_URL}" "Teams_installer.pkg" "Microsoft Teams"; then
+        return 1
+    fi
+
+    log "Installing Microsoft Teams..."
+    if installer -pkg "${DOWNLOADED_PKG_PATH}" -target /; then
+        log "Microsoft Teams installed successfully."
+        log "Open Teams and sign in with the account to activate."
+    else
+        log "ERROR: Installer exited with a non-zero status. Check the log above for details."
+        return 1
+    fi
+}
+
+# ============================================================
+# FUNCTION: Reinstall Office 365 (full suite)
+# ============================================================
 reinstall_office() {
     log "--- Reinstalling Microsoft 365 ---"
     local DOWNLOAD_URL="https://go.microsoft.com/fwlink/?linkid=525133"
-    local TMP_INSTALL_DIR="/private/tmp/office-reinstall"
-    local PKG_PATH="${TMP_INSTALL_DIR}/Microsoft_Office_installer.pkg"
 
     echo ""
-    echo "  This will download the official Microsoft 365 installer (full suite,"
-    echo "  ~2GB+) directly from Microsoft's CDN and install it silently."
+    echo "  This will install the official Microsoft 365 installer (full suite,"
+    echo "  ~2GB+), using a cached copy if one already exists."
     echo "  You will need to sign in the first time you open an Office app."
     echo ""
     read -rp "  Press Enter to begin, or Ctrl+C to cancel... "
 
-    mkdir -p "${TMP_INSTALL_DIR}"
-    log "Downloading Microsoft 365 installer from ${DOWNLOAD_URL}..."
-    if ! curl -L "${DOWNLOAD_URL}" --output "${PKG_PATH}"; then
-        log "ERROR: Download failed. Check network access to go.microsoft.com / officecdn CDN."
-        rm -rf "${TMP_INSTALL_DIR}"
+    if ! download_pkg_cached "${DOWNLOAD_URL}" "Microsoft_Office_installer.pkg" "Microsoft 365"; then
         return 1
     fi
 
-    if [ ! -s "${PKG_PATH}" ]; then
-        log "ERROR: Downloaded file is empty or missing. Aborting install."
-        rm -rf "${TMP_INSTALL_DIR}"
-        return 1
-    fi
-
-    log "Download complete ($(du -h "${PKG_PATH}" | cut -f1)). Installing..."
-    if installer -pkg "${PKG_PATH}" -target /; then
+    log "Installing Microsoft 365..."
+    if installer -pkg "${DOWNLOADED_PKG_PATH}" -target /; then
         log "Microsoft 365 installed successfully."
         log "Open any Office app (e.g. Word) and sign in with the Microsoft 365 account to activate."
     else
         log "ERROR: Installer exited with a non-zero status. Check the log above for details."
-        rm -rf "${TMP_INSTALL_DIR}"
         return 1
     fi
-
-    rm -rf "${TMP_INSTALL_DIR}"
 }
 
 # ============================================================
 # MENU LOOP
+# ============================================================
+# ============================================================
+# SUBMENU: Removal
+# ============================================================
+menu_removal() {
+    while true; do
+        echo ""
+        echo "------ Removal ------"
+        echo " 1) Remove license + uninstall Office (no login check)"
+        echo " 2) Full clean - remove license, uninstall Office, AND clean login/auth remnants"
+        echo " 3) Remove license only (keep apps installed) - lets user sign in again"
+        echo " b) Back to main menu"
+        read -rp "Choose an option: " SUB
+        log "=== Removal submenu: option ${SUB} selected ==="
+        case "${SUB}" in
+            1)
+                remove_license
+                uninstall_office
+                log "--- Action complete ---"
+                log "A restart is recommended before reinstalling Office."
+                ;;
+            2)
+                remove_license
+                uninstall_office
+                check_login_remnants true
+                log "--- Action complete ---"
+                log "A restart is recommended before reinstalling Office."
+                ;;
+            3)
+                remove_license
+                log "--- Action complete ---"
+                log "License removed - apps are still installed. Open any Office app and sign in with the account you want to use."
+                ;;
+            b|B) return ;;
+            *) echo "Invalid option, try again." ;;
+        esac
+    done
+}
+
+# ============================================================
+# SUBMENU: Login / Auth checks
+# ============================================================
+menu_login_auth() {
+    while true; do
+        echo ""
+        echo "------ Login / Auth ------"
+        echo " 1) Report only - check for login/auth remnants (no changes)"
+        echo " 2) Clean - remove login/auth remnants (skip license/uninstall)"
+        echo " 3) Verify removal status - confirm Office and license are fully gone"
+        echo " 4) Clear Safari Microsoft/Office session - stop silent auto sign-in"
+        echo " b) Back to main menu"
+        read -rp "Choose an option: " SUB
+        log "=== Login/Auth submenu: option ${SUB} selected ==="
+        case "${SUB}" in
+            1) check_login_remnants false; log "--- Action complete ---" ;;
+            2) check_login_remnants true; log "--- Action complete ---" ;;
+            3) verify_removal_status; log "--- Action complete ---" ;;
+            4) clear_safari_microsoft_session; log "--- Action complete ---" ;;
+            b|B) return ;;
+            *) echo "Invalid option, try again." ;;
+        esac
+    done
+}
+
+# ============================================================
+# SUBMENU: Install / Reinstall
+# ============================================================
+menu_install() {
+    while true; do
+        echo ""
+        echo "------ Install / Reinstall ------"
+        echo " 1) Reinstall Microsoft 365 (full suite) - cached download + silent install"
+        echo " 2) Install Microsoft Teams (standalone) - cached download + silent install"
+        echo " b) Back to main menu"
+        read -rp "Choose an option: " SUB
+        log "=== Install submenu: option ${SUB} selected ==="
+        case "${SUB}" in
+            1) reinstall_office; log "--- Action complete ---" ;;
+            2) install_teams_standalone; log "--- Action complete ---" ;;
+            b|B) return ;;
+            *) echo "Invalid option, try again." ;;
+        esac
+    done
+}
+
+# ============================================================
+# SUBMENU: Maintenance
+# ============================================================
+menu_maintenance() {
+    while true; do
+        echo ""
+        echo "------ Maintenance ------"
+        echo " 1) View cached installers"
+        echo " 2) Clear cached installers (Office/Teams .pkg files)"
+        echo " b) Back to main menu"
+        read -rp "Choose an option: " SUB
+        log "=== Maintenance submenu: option ${SUB} selected ==="
+        case "${SUB}" in
+            1)
+                echo ""
+                echo "Cache directory: ${PKG_CACHE_DIR}"
+                if [ -d "${PKG_CACHE_DIR}" ] && [ -n "$(ls -A "${PKG_CACHE_DIR}" 2>/dev/null)" ]; then
+                    ls -lh "${PKG_CACHE_DIR}"
+                else
+                    echo "(empty - no cached installers found)"
+                fi
+                ;;
+            2) clear_pkg_cache; log "--- Action complete ---" ;;
+            b|B) return ;;
+            *) echo "Invalid option, try again." ;;
+        esac
+    done
+}
+
+# ============================================================
+# MAIN MENU LOOP
 # ============================================================
 while true; do
     echo ""
     echo "=========================================="
     echo " Microsoft 365 Removal Toolkit for macOS"
     echo "=========================================="
-    echo " 1) Remove license + uninstall Office (no login check)"
-    echo " 2) Report only - check for login/auth remnants (no changes)"
-    echo " 3) Full clean - remove license, uninstall Office, AND clean login/auth remnants"
-    echo " 4) Login/auth remnants only - clean (skip license/uninstall)"
-    echo " 5) Verify removal status - confirm Office and license are fully gone"
-    echo " 6) Reinstall Microsoft 365 - direct download + silent install"
-    echo " 7) Remove license only (keep apps installed) - lets user sign in again"
+    echo " 1) Removal"
+    echo " 2) Login / Auth"
+    echo " 3) Install / Reinstall"
+    echo " 4) Maintenance"
     echo " 0) Exit"
     echo "=========================================="
-    read -rp "Choose an option: " CHOICE
+    read -rp "Choose a category: " CHOICE
 
-    log "=== Option ${CHOICE} selected ==="
+    log "=== Main menu: option ${CHOICE} selected ==="
 
     case "${CHOICE}" in
-        1)
-            remove_license
-            uninstall_office
-            log "--- Action complete ---"
-            log "A restart is recommended before reinstalling Office."
-            ;;
-        2)
-            check_login_remnants false
-            log "--- Action complete ---"
-            ;;
-        3)
-            remove_license
-            uninstall_office
-            check_login_remnants true
-            log "--- Action complete ---"
-            log "A restart is recommended before reinstalling Office."
-            ;;
-        4)
-            check_login_remnants true
-            log "--- Action complete ---"
-            ;;
-        5)
-            verify_removal_status
-            log "--- Action complete ---"
-            ;;
-        6)
-            reinstall_office
-            log "--- Action complete ---"
-            ;;
-        7)
-            remove_license
-            log "--- Action complete ---"
-            log "License removed - apps are still installed. Open any Office app and sign in with the account you want to use."
-            ;;
+        1) menu_removal ;;
+        2) menu_login_auth ;;
+        3) menu_install ;;
+        4) menu_maintenance ;;
         0)
             log "=== Exiting toolkit. Log saved at: ${LOG_FILE} ==="
             exit 0
