@@ -1,9 +1,10 @@
 #!/bin/bash
 #
-# office365-toolkit.sh
+# jba9-mac-toolkit.sh
 #
-# All-in-one Microsoft 365 removal toolkit for macOS. Not tied to Jamf -
-# run manually, interactive menu.
+# All-in-one macOS toolkit: Microsoft 365 removal/reinstall plus common
+# app installs (Chrome, Brave, Teams, Google Drive, Cyberduck, VS Code,
+# Homebrew, and more). Not tied to Jamf - run manually, interactive menu.
 #
 # Combines:
 #   - License removal (Microsoft's "Unlicense" tool)
@@ -28,7 +29,7 @@ LOGGED_IN_USER=$(stat -f%Su /dev/console)
 USER_HOME=$(dscl . -read /Users/"${LOGGED_IN_USER}" NFSHomeDirectory | awk '{print $2}')
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 LOG_DIR="/Library/Logs/OfficeRemoval"
-LOG_FILE="${LOG_DIR}/office-toolkit-${TIMESTAMP}.log"
+LOG_FILE="${LOG_DIR}/jba9-toolkit-${TIMESTAMP}.log"
 TMP_DIR="/private/tmp/office-unlicense"
 UNLICENSE_URL="https://raw.githubusercontent.com/pbowden-msft/Unlicense/master/Unlicense"
 UNLICENSE_BIN="${TMP_DIR}/Unlicense"
@@ -51,7 +52,7 @@ echo -e "${CYAN}${BOLD}"
 cat << "EOF"
 ╔══════════════════════════════════════════════════════════╗
 ║                                                            ║
-║          MICROSOFT 365 REMOVAL TOOLKIT — macOS            ║
+║              JBA9 MAC TOOLKIT — macOS                     ║
 ║                                                            ║
 ╚══════════════════════════════════════════════════════════╝
 EOF
@@ -486,14 +487,14 @@ download_pkg_cached() {
     fi
 
     log "Downloading ${friendly_name} installer from ${url}..."
-    if ! curl -L "${url}" --output "${cache_path}"; then
+    if ! curl -L -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15" --fail "${url}" --output "${cache_path}"; then
         log "ERROR: Download failed. Check network access."
         rm -f "${cache_path}"
         return 1
     fi
 
-    if [ ! -s "${cache_path}" ]; then
-        log "ERROR: Downloaded file is empty or missing."
+    if [ ! -s "${cache_path}" ] || [ "$(stat -f%z "${cache_path}" 2>/dev/null || echo 0)" -lt 51200 ]; then
+        log "ERROR: Downloaded file is missing or suspiciously small - likely an error page, not the real installer."
         rm -f "${cache_path}"
         return 1
     fi
@@ -536,14 +537,14 @@ download_dmg_cached() {
     fi
 
     log "Downloading ${friendly_name} installer from ${url}..."
-    if ! curl -L "${url}" --output "${cache_path}"; then
+    if ! curl -L -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15" --fail "${url}" --output "${cache_path}"; then
         log "ERROR: Download failed. Check network access."
         rm -f "${cache_path}"
         return 1
     fi
 
-    if [ ! -s "${cache_path}" ]; then
-        log "ERROR: Downloaded file is empty or missing."
+    if [ ! -s "${cache_path}" ] || [ "$(stat -f%z "${cache_path}" 2>/dev/null || echo 0)" -lt 51200 ]; then
+        log "ERROR: Downloaded file is missing or suspiciously small - likely an error page, not the real installer."
         rm -f "${cache_path}"
         return 1
     fi
@@ -683,13 +684,13 @@ install_vscode() {
 
     if [ ! -f "${cache_path}" ]; then
         log "Downloading VS Code from ${DOWNLOAD_URL}..."
-        if ! curl -L "${DOWNLOAD_URL}" --output "${cache_path}"; then
+        if ! curl -L -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15" --fail "${DOWNLOAD_URL}" --output "${cache_path}"; then
             log "ERROR: Download failed. Check network access."
             rm -f "${cache_path}"
             return 1
         fi
-        if [ ! -s "${cache_path}" ]; then
-            log "ERROR: Downloaded file is empty or missing."
+        if [ ! -s "${cache_path}" ] || [ "$(stat -f%z "${cache_path}" 2>/dev/null || echo 0)" -lt 51200 ]; then
+            log "ERROR: Downloaded file is missing or suspiciously small - likely an error page, not the real installer."
             rm -f "${cache_path}"
             return 1
         fi
@@ -721,6 +722,118 @@ install_vscode() {
     log "Visual Studio Code installed successfully."
 }
 
+# ============================================================
+# FUNCTION: Install Homebrew (bootstrap)
+# ============================================================
+install_homebrew() {
+    log "--- Installing Homebrew ---"
+    if command -v brew >/dev/null 2>&1; then
+        log "Homebrew is already installed ($(sudo -u "${LOGGED_IN_USER}" brew --version | head -1))."
+        return 0
+    fi
+
+    echo ""
+    echo "  This will run Homebrew's official install script as ${LOGGED_IN_USER}."
+    echo "  You may be prompted for confirmation during the install."
+    echo ""
+    read -rp "  Press Enter to begin, or Ctrl+C to cancel... "
+
+    log "Running official Homebrew install script..."
+    sudo -u "${LOGGED_IN_USER}" /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    if command -v brew >/dev/null 2>&1 || [ -x /opt/homebrew/bin/brew ] || [ -x /usr/local/bin/brew ]; then
+        log "Homebrew installed successfully."
+    else
+        log "WARNING: Homebrew install script finished but 'brew' was not found on PATH. It may need a new terminal session to take effect."
+    fi
+}
+
+# ============================================================
+# FUNCTION: Generic Homebrew cask installer with browser fallback
+# Args: $1 = cask name, $2 = friendly name, $3 = fallback download page URL
+# ============================================================
+install_via_brew_cask() {
+    local cask_name="$1"
+    local friendly_name="$2"
+    local fallback_url="$3"
+
+    if command -v brew >/dev/null 2>&1; then
+        log "Homebrew found. Installing ${friendly_name} via 'brew install --cask ${cask_name}'..."
+        if sudo -u "${LOGGED_IN_USER}" brew install --cask "${cask_name}"; then
+            log "${friendly_name} installed successfully via Homebrew."
+        else
+            log "ERROR: Homebrew install failed for ${friendly_name}. See output above."
+            return 1
+        fi
+    else
+        log "Homebrew not found on this Mac."
+        echo ""
+        echo "  Opening the official ${friendly_name} download page instead - Homebrew isn't"
+        echo "  installed, and there's no stable direct-download link to script against."
+        echo "  (Use the 'Install Homebrew' option first if you'd like scripted installs in future.)"
+        echo ""
+        read -rp "  Press Enter to open the download page... "
+        sudo -u "${LOGGED_IN_USER}" open "${fallback_url}"
+        log "Opened ${fallback_url} for manual download."
+    fi
+}
+
+# ============================================================
+# FUNCTION: Install The Unarchiver
+# ============================================================
+install_unarchiver() {
+    log "--- Installing The Unarchiver ---"
+    echo ""
+    echo "  This will install The Unarchiver via Homebrew if available, or open"
+    echo "  the download page otherwise."
+    echo ""
+    read -rp "  Press Enter to begin, or Ctrl+C to cancel... "
+    install_via_brew_cask "the-unarchiver" "The Unarchiver" "https://theunarchiver.com/"
+}
+
+# ============================================================
+# FUNCTION: Install AppCleaner
+# ============================================================
+install_appcleaner() {
+    log "--- Installing AppCleaner ---"
+    echo ""
+    echo "  This will install AppCleaner via Homebrew if available, or open"
+    echo "  the download page otherwise."
+    echo ""
+    read -rp "  Press Enter to begin, or Ctrl+C to cancel... "
+    install_via_brew_cask "appcleaner" "AppCleaner" "https://freemacsoft.net/appcleaner/"
+}
+
+# ============================================================
+# FUNCTION: Install Adobe Acrobat Reader
+# ============================================================
+install_acrobat_reader() {
+    log "--- Installing Adobe Acrobat Reader ---"
+    echo ""
+    echo "  This will install Adobe Acrobat Reader via Homebrew if available, or open"
+    echo "  the download page otherwise."
+    echo ""
+    read -rp "  Press Enter to begin, or Ctrl+C to cancel... "
+    install_via_brew_cask "adobe-acrobat-reader" "Adobe Acrobat Reader" "https://get.adobe.com/reader/"
+}
+
+# ============================================================
+# FUNCTION: Install Bitdefender
+# ============================================================
+install_bitdefender() {
+    log "--- Installing Bitdefender ---"
+    echo ""
+    echo "  Bitdefender (consumer or GravityZone/business) uses an account-specific"
+    echo "  installer generated from your Bitdefender or GravityZone console -"
+    echo "  there's no universal direct-download link that can be safely hardcoded"
+    echo "  into a script, especially for a business/education deployment."
+    echo ""
+    echo "  Opening the Bitdefender site so you can download the correct installer"
+    echo "  for this account/tenant."
+    echo ""
+    read -rp "  Press Enter to open the site, or Ctrl+C to cancel... "
+    sudo -u "${LOGGED_IN_USER}" open "https://www.bitdefender.com/"
+    log "Opened https://www.bitdefender.com/ - download the installer tied to the correct GCU/account license."
+}
 
 install_cyberduck() {
     log "--- Installing Cyberduck ---"
@@ -909,6 +1022,11 @@ menu_install() {
         echo " 5) Install Google Drive - cached download + silent install"
         echo " 6) Install Cyberduck - via Homebrew, or browser fallback"
         echo " 7) Install Visual Studio Code - cached download + install"
+        echo " 8) Install Homebrew - bootstrap package manager"
+        echo " 9) Install The Unarchiver - via Homebrew, or browser fallback"
+        echo "10) Install AppCleaner - via Homebrew, or browser fallback"
+        echo "11) Install Adobe Acrobat Reader - via Homebrew, or browser fallback"
+        echo "12) Install Bitdefender - opens site (account-specific installer)"
         echo " b) Back to main menu"
         read -rp "Choose an option: " SUB
         log "=== Install submenu: option ${SUB} selected ==="
@@ -920,6 +1038,11 @@ menu_install() {
             5) install_google_drive; log "--- Action complete ---" ;;
             6) install_cyberduck; log "--- Action complete ---" ;;
             7) install_vscode; log "--- Action complete ---" ;;
+            8) install_homebrew; log "--- Action complete ---" ;;
+            9) install_unarchiver; log "--- Action complete ---" ;;
+            10) install_appcleaner; log "--- Action complete ---" ;;
+            11) install_acrobat_reader; log "--- Action complete ---" ;;
+            12) install_bitdefender; log "--- Action complete ---" ;;
             b|B) return ;;
             *) echo "Invalid option, try again." ;;
         esac
@@ -961,7 +1084,7 @@ menu_maintenance() {
 while true; do
     echo ""
     echo "=========================================="
-    echo " Microsoft 365 Removal Toolkit for macOS"
+    echo " JBA9 Mac Toolkit"
     echo "=========================================="
     echo " 1) Removal"
     echo " 2) Login / Auth"
