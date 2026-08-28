@@ -655,8 +655,73 @@ install_google_drive() {
 }
 
 # ============================================================
-# FUNCTION: Install Cyberduck
+# FUNCTION: Install Visual Studio Code
 # ============================================================
+install_vscode() {
+    log "--- Installing Visual Studio Code ---"
+    local DOWNLOAD_URL="https://code.visualstudio.com/sha/download?build=stable&os=darwin-universal"
+    local cache_path="${PKG_CACHE_DIR}/VSCode-darwin-universal.zip"
+
+    echo ""
+    echo "  This will install Visual Studio Code using a cached copy if one already exists."
+    echo ""
+    read -rp "  Press Enter to begin, or Ctrl+C to cancel... "
+
+    mkdir -p "${PKG_CACHE_DIR}"
+
+    if [ -f "${cache_path}" ]; then
+        local cache_date
+        cache_date=$(stat -f "%Sm" -t "%Y-%m-%d" "${cache_path}")
+        echo ""
+        log "Found cached VS Code installer, downloaded ${cache_date}."
+        read -rp "  Use cached copy? [Y/n] (n = re-download latest): " USE_CACHE
+        if [[ "${USE_CACHE}" =~ ^[Nn] ]]; then
+            log "Re-downloading VS Code as requested..."
+            rm -f "${cache_path}"
+        fi
+    fi
+
+    if [ ! -f "${cache_path}" ]; then
+        log "Downloading VS Code from ${DOWNLOAD_URL}..."
+        if ! curl -L "${DOWNLOAD_URL}" --output "${cache_path}"; then
+            log "ERROR: Download failed. Check network access."
+            rm -f "${cache_path}"
+            return 1
+        fi
+        if [ ! -s "${cache_path}" ]; then
+            log "ERROR: Downloaded file is empty or missing."
+            rm -f "${cache_path}"
+            return 1
+        fi
+        log "Download complete ($(du -h "${cache_path}" | cut -f1)). Cached at ${cache_path}"
+    fi
+
+    local EXTRACT_DIR="/private/tmp/vscode-extract"
+    rm -rf "${EXTRACT_DIR}"
+    mkdir -p "${EXTRACT_DIR}"
+
+    log "Extracting VS Code..."
+    if ! ditto -xk "${cache_path}" "${EXTRACT_DIR}"; then
+        log "ERROR: Failed to extract the downloaded zip."
+        rm -rf "${EXTRACT_DIR}"
+        return 1
+    fi
+
+    if [ ! -d "${EXTRACT_DIR}/Visual Studio Code.app" ]; then
+        log "ERROR: Visual Studio Code.app not found after extraction."
+        rm -rf "${EXTRACT_DIR}"
+        return 1
+    fi
+
+    log "Copying Visual Studio Code.app to /Applications..."
+    rm -rf "/Applications/Visual Studio Code.app"
+    ditto "${EXTRACT_DIR}/Visual Studio Code.app" "/Applications/Visual Studio Code.app"
+    rm -rf "${EXTRACT_DIR}"
+
+    log "Visual Studio Code installed successfully."
+}
+
+
 install_cyberduck() {
     log "--- Installing Cyberduck ---"
     echo ""
@@ -843,6 +908,7 @@ menu_install() {
         echo " 4) Install Brave Browser - cached download + silent install"
         echo " 5) Install Google Drive - cached download + silent install"
         echo " 6) Install Cyberduck - via Homebrew, or browser fallback"
+        echo " 7) Install Visual Studio Code - cached download + install"
         echo " b) Back to main menu"
         read -rp "Choose an option: " SUB
         log "=== Install submenu: option ${SUB} selected ==="
@@ -853,6 +919,7 @@ menu_install() {
             4) install_brave; log "--- Action complete ---" ;;
             5) install_google_drive; log "--- Action complete ---" ;;
             6) install_cyberduck; log "--- Action complete ---" ;;
+            7) install_vscode; log "--- Action complete ---" ;;
             b|B) return ;;
             *) echo "Invalid option, try again." ;;
         esac
