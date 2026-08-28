@@ -506,6 +506,185 @@ download_pkg_cached() {
 }
 
 # ============================================================
+# FUNCTION: Download a dmg with caching (generic - not pkg-based)
+# Args: $1 = download URL, $2 = cache filename, $3 = friendly name for messages
+# Sets: DOWNLOADED_DMG_PATH on success
+# ============================================================
+download_dmg_cached() {
+    local url="$1"
+    local cache_filename="$2"
+    local friendly_name="$3"
+    local cache_path="${PKG_CACHE_DIR}/${cache_filename}"
+
+    mkdir -p "${PKG_CACHE_DIR}"
+    DOWNLOADED_DMG_PATH=""
+
+    if [ -f "${cache_path}" ]; then
+        local cache_date
+        cache_date=$(stat -f "%Sm" -t "%Y-%m-%d" "${cache_path}")
+        echo ""
+        log "Found cached ${friendly_name} installer, downloaded ${cache_date}."
+        read -rp "  Use cached copy? [Y/n] (n = re-download latest): " USE_CACHE
+        if [[ ! "${USE_CACHE}" =~ ^[Nn] ]]; then
+            log "Using cached ${friendly_name} installer."
+            DOWNLOADED_DMG_PATH="${cache_path}"
+            return 0
+        else
+            log "Re-downloading ${friendly_name} as requested..."
+            rm -f "${cache_path}"
+        fi
+    fi
+
+    log "Downloading ${friendly_name} installer from ${url}..."
+    if ! curl -L "${url}" --output "${cache_path}"; then
+        log "ERROR: Download failed. Check network access."
+        rm -f "${cache_path}"
+        return 1
+    fi
+
+    if [ ! -s "${cache_path}" ]; then
+        log "ERROR: Downloaded file is empty or missing."
+        rm -f "${cache_path}"
+        return 1
+    fi
+
+    log "Download complete ($(du -h "${cache_path}" | cut -f1)). Cached at ${cache_path}"
+    DOWNLOADED_DMG_PATH="${cache_path}"
+    return 0
+}
+
+# ============================================================
+# FUNCTION: Install Google Chrome
+# ============================================================
+install_chrome() {
+    log "--- Installing Google Chrome ---"
+    local DOWNLOAD_URL="https://dl.google.com/chrome/mac/stable/googlechrome.pkg"
+
+    echo ""
+    echo "  This will install Google Chrome using a cached copy if one already exists."
+    echo ""
+    read -rp "  Press Enter to begin, or Ctrl+C to cancel... "
+
+    if ! download_pkg_cached "${DOWNLOAD_URL}" "GoogleChrome.pkg" "Google Chrome"; then
+        return 1
+    fi
+
+    log "Installing Google Chrome..."
+    if installer -pkg "${DOWNLOADED_PKG_PATH}" -target /; then
+        log "Google Chrome installed successfully."
+    else
+        log "ERROR: Installer exited with a non-zero status."
+        return 1
+    fi
+}
+
+# ============================================================
+# FUNCTION: Install Brave Browser
+# ============================================================
+install_brave() {
+    log "--- Installing Brave Browser ---"
+    local DOWNLOAD_URL="https://brave-browser-downloads.s3.brave.com/latest/Brave-Browser.dmg"
+    local VOLNAME="Brave Browser"
+
+    echo ""
+    echo "  This will install Brave Browser using a cached copy if one already exists."
+    echo ""
+    read -rp "  Press Enter to begin, or Ctrl+C to cancel... "
+
+    if ! download_dmg_cached "${DOWNLOAD_URL}" "Brave-Browser.dmg" "Brave Browser"; then
+        return 1
+    fi
+
+    log "Mounting disk image..."
+    hdiutil attach "${DOWNLOADED_DMG_PATH}" -nobrowse -quiet
+    if [ ! -d "/Volumes/${VOLNAME}/Brave Browser.app" ]; then
+        log "ERROR: Could not find Brave Browser.app inside the disk image."
+        hdiutil detach "/Volumes/${VOLNAME}" -quiet 2>/dev/null
+        return 1
+    fi
+
+    log "Copying Brave Browser.app to /Applications..."
+    rm -rf "/Applications/Brave Browser.app"
+    ditto -rsrc "/Volumes/${VOLNAME}/Brave Browser.app" "/Applications/Brave Browser.app"
+
+    log "Unmounting disk image..."
+    hdiutil detach "/Volumes/${VOLNAME}" -quiet
+
+    log "Brave Browser installed successfully."
+}
+
+# ============================================================
+# FUNCTION: Install Google Drive
+# ============================================================
+install_google_drive() {
+    log "--- Installing Google Drive ---"
+    local DOWNLOAD_URL="https://dl.google.com/drive/GoogleDrive.dmg"
+    local VOLNAME="Install Google Drive"
+
+    echo ""
+    echo "  This will install Google Drive using a cached copy if one already exists."
+    echo ""
+    read -rp "  Press Enter to begin, or Ctrl+C to cancel... "
+
+    if ! download_dmg_cached "${DOWNLOAD_URL}" "GoogleDrive.dmg" "Google Drive"; then
+        return 1
+    fi
+
+    log "Mounting disk image..."
+    hdiutil attach "${DOWNLOADED_DMG_PATH}" -nobrowse -quiet
+    local PKG_INSIDE
+    PKG_INSIDE=$(find "/Volumes/${VOLNAME}" -name "*.pkg" 2>/dev/null | head -1)
+    if [ -z "${PKG_INSIDE}" ]; then
+        log "ERROR: Could not find installer .pkg inside the disk image."
+        hdiutil detach "/Volumes/${VOLNAME}" -quiet 2>/dev/null
+        return 1
+    fi
+
+    log "Installing Google Drive..."
+    if installer -pkg "${PKG_INSIDE}" -target /; then
+        log "Google Drive installed successfully."
+        log "Open Google Drive from Applications and sign in with the account to use."
+    else
+        log "ERROR: Installer exited with a non-zero status."
+        hdiutil detach "/Volumes/${VOLNAME}" -quiet 2>/dev/null
+        return 1
+    fi
+
+    log "Unmounting disk image..."
+    hdiutil detach "/Volumes/${VOLNAME}" -quiet
+}
+
+# ============================================================
+# FUNCTION: Install Cyberduck
+# ============================================================
+install_cyberduck() {
+    log "--- Installing Cyberduck ---"
+    echo ""
+    echo "  Cyberduck has no fixed direct-download URL (versioned filenames only),"
+    echo "  so this uses Homebrew if available, which tracks the correct link itself."
+    echo ""
+
+    if command -v brew >/dev/null 2>&1; then
+        log "Homebrew found. Installing Cyberduck via 'brew install --cask cyberduck'..."
+        if sudo -u "${LOGGED_IN_USER}" brew install --cask cyberduck; then
+            log "Cyberduck installed successfully via Homebrew."
+        else
+            log "ERROR: Homebrew install failed. See output above."
+            return 1
+        fi
+    else
+        log "Homebrew not found on this Mac."
+        echo ""
+        echo "  Opening the official Cyberduck download page instead - Homebrew isn't"
+        echo "  installed, and there's no stable direct-download link to script against."
+        echo ""
+        read -rp "  Press Enter to open the download page... "
+        sudo -u "${LOGGED_IN_USER}" open "https://cyberduck.io/download/"
+        log "Opened https://cyberduck.io/download/ for manual download."
+    fi
+}
+
+# ============================================================
 # FUNCTION: Clear the pkg cache
 # ============================================================
 clear_pkg_cache() {
@@ -660,12 +839,20 @@ menu_install() {
         echo "------ Install / Reinstall ------"
         echo " 1) Reinstall Microsoft 365 (full suite) - cached download + silent install"
         echo " 2) Install Microsoft Teams (standalone) - cached download + silent install"
+        echo " 3) Install Google Chrome - cached download + silent install"
+        echo " 4) Install Brave Browser - cached download + silent install"
+        echo " 5) Install Google Drive - cached download + silent install"
+        echo " 6) Install Cyberduck - via Homebrew, or browser fallback"
         echo " b) Back to main menu"
         read -rp "Choose an option: " SUB
         log "=== Install submenu: option ${SUB} selected ==="
         case "${SUB}" in
             1) reinstall_office; log "--- Action complete ---" ;;
             2) install_teams_standalone; log "--- Action complete ---" ;;
+            3) install_chrome; log "--- Action complete ---" ;;
+            4) install_brave; log "--- Action complete ---" ;;
+            5) install_google_drive; log "--- Action complete ---" ;;
+            6) install_cyberduck; log "--- Action complete ---" ;;
             b|B) return ;;
             *) echo "Invalid option, try again." ;;
         esac
