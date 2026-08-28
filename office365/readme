@@ -1,0 +1,112 @@
+# JBA9 Mac Toolkit
+
+An all-in-one, interactive macOS admin script for removing/reinstalling Microsoft 365,
+cleaning up leftover sign-in data, and installing a set of common apps. Not tied to Jamf —
+run manually from Terminal on any Mac.
+
+## Quick start
+
+```bash
+curl -o jba9-mac-toolkit.sh https://raw.githubusercontent.com/jba9gla/GCU-Scirpts/refs/heads/main/office365/jba9-mac-toolkit.sh
+chmod +x jba9-mac-toolkit.sh
+sudo ./jba9-mac-toolkit.sh
+```
+
+Must be run with `sudo` — removal and installs touch `/Applications` and `/Library`.
+
+If `curl` reports "command not found" after downloading, the executable bit likely
+didn't survive the download — re-run `chmod +x jba9-mac-toolkit.sh` and try again.
+If macOS blocks it as downloaded-from-the-internet, clear the quarantine flag:
+
+```bash
+xattr -d com.apple.quarantine jba9-mac-toolkit.sh 2>/dev/null
+```
+
+## What it does
+
+On launch you get a menu with four categories:
+
+### 1. Removal
+- Remove Microsoft 365 license + uninstall Office (apps, support files, containers)
+- Full clean — license removal + uninstall + login/auth remnant cleanup in one pass
+- Remove license only, keep apps installed (useful for "wrong account signed in")
+
+### 2. Login / Auth
+- Report-only check for leftover Office sign-in data (keychain, identity broker
+  cache, preference domains, login items) — no changes made
+- Clean version of the same check, with Microsoft Teams handled separately via an
+  explicit Keep/Remove prompt (Teams is often used standalone, independent of Office)
+- Verify removal status — confirms apps, license files, and activation keychain
+  entries are actually gone before you reinstall
+- Clear Safari's Microsoft/Office web session data — stops Outlook/Office silently
+  auto-signing in via a lingering Safari session instead of prompting for credentials
+
+### 3. Install / Reinstall
+Cached downloads from official sources, installed silently where possible:
+
+| App | Source | Method |
+|---|---|---|
+| Microsoft 365 (full suite) | Microsoft CDN | Direct `.pkg`, silent install |
+| Microsoft Teams (standalone) | Microsoft CDN | Direct `.pkg`, silent install |
+| Google Chrome | Google | Direct `.pkg`, silent install |
+| Brave Browser | Brave | Direct `.dmg`, app copied to `/Applications` |
+| Google Drive | Google | Direct `.dmg` containing `.pkg`, silent install |
+| Visual Studio Code | Microsoft | Direct `.zip`, extracted to `/Applications` |
+| Homebrew | Homebrew | Official bootstrap install script |
+| Cyberduck | Homebrew cask, or browser fallback | No stable direct-download URL exists |
+| The Unarchiver | Homebrew cask, or browser fallback | No stable direct-download URL exists |
+| AppCleaner | Homebrew cask, or browser fallback | No stable direct-download URL exists |
+| Adobe Acrobat Reader | Homebrew cask, or browser fallback | No stable direct-download URL exists |
+| Bitdefender | Opens bitdefender.com | Account/tenant-specific installer — can't be hardcoded |
+
+Downloads use a browser-style User-Agent and a minimum file-size check to catch
+cases where a vendor silently serves an error/redirect page instead of the real
+installer (this was a real bug during development — see Known issues below).
+
+### 4. Maintenance
+- View cached installers and their location
+- Clear the installer cache
+
+## Where things are stored
+
+- **Logs:** `/Library/Logs/JBA9Toolkit/jba9-toolkit-<timestamp>.log` — one log
+  file per run, everything printed to the terminal is also written here
+- **Cached installers:** `/Library/Application Support/JBA9ToolkitCache/` —
+  persists across reboots and script runs, so re-running an install doesn't
+  re-download multi-GB files every time. You'll be asked whether to reuse the
+  cached copy or fetch a fresh one each time you install something.
+
+## Notes and known issues
+
+- **SIP-protected container folders:** After uninstalling Office, a few empty
+  `~/Library/Containers/com.microsoft.*` folders may be left behind. These are
+  inert (no app attached) and protected by macOS's sandboxing system even from
+  root — this is expected macOS behaviour, not a script bug. Safe to ignore.
+- **Safari session sign-in:** If Outlook/Office silently signs in without
+  prompting, it's usually because Safari holds an active Microsoft/Office web
+  session (via `ASWebAuthenticationSession`), not a leftover file. Use
+  Login/Auth → "Clear Safari Microsoft/Office session" to fix this.
+- **Some Mac usernames trigger auto-suggested accounts:** If your local macOS
+  short username matches the local part of a GCU email address, some Microsoft
+  apps will auto-suggest that account purely from a username/domain guess, with
+  zero stored credentials anywhere. This is expected Microsoft app behaviour,
+  not something this script controls.
+- **Cyberduck / The Unarchiver / AppCleaner / Adobe Acrobat Reader** have no
+  stable "latest" direct-download URL (versioned filenames only), so these
+  install via Homebrew if it's present, falling back to opening the official
+  download page in the browser otherwise.
+- **Bitdefender** is intentionally never auto-downloaded — GravityZone/business
+  and consumer installers are both account-specific, tied to your organisation's
+  console. The script just opens bitdefender.com for you to grab the correct one.
+
+## Requirements
+
+- macOS with `sudo` access
+- Network access to: `raw.githubusercontent.com`, `go.microsoft.com`,
+  `dl.google.com`, `brave-browser-downloads.s3.brave.com`,
+  `code.visualstudio.com`, and (if using Homebrew-based installs)
+  `github.com` / `raw.githubusercontent.com` for the Homebrew installer itself
+
+## Author
+
+JACB Services
