@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Description</key>
+    <string>Builds a signed pkg for Nextpad++ from the notarized DMG.</string>
+    <key>Identifier</key>
+    <string>com.gcu.pkg.NextpadPlusPlus</string>
+    <key>Input</key>
+    <dict>
+        <key>NAME</key>
+        <string>Nextpad++</string>
+    </dict>
+    <key>MinimumVersion</key>
+    <string>2.3</string>
+    <key>ParentRecipe</key>
+    <string>com.gcu.download.NextpadPlusPlus</string>
+    <key>Process</key>
+    <array>
+        <dict>
+            <key>Processor</key>
+            <string>CodeSignatureVerifier</string>
+            <key>Arguments</key>
+            <dict>
+                <key>input_path</key>
+                <string>%pathname%/Nextpad++ macOS/Nextpad++.app</string>
+                <key>requirement</key>
+                <string>anchor apple generic and certificate leaf[subject.OU] exists</string>
+            </dict>
+        </dict>
+        <dict>
+            <key>Processor</key>
+            <string>PkgCreator</string>
+            <key>Arguments</key>
+            <dict>
+                <key>pkg_request</key>
+                <dict>
+                    <key>pkgname</key>
+                    <string>%NAME%-%version%</string>
+                    <key>version</key>
+                    <string>%version%</string>
+                    <key>id</key>
+                    <string>org.nextpad.nextpadplusplus</string>
+                    <key>options</key>
+                    <string>purge_ds_store</string>
+                    <key>chown</key>
+                    <array>
+                        <dict>
+                            <key>path</key>
+                            <string>Applications</string>
+                            <key>user</key>
+                            <string>root</string>
+                            <key>group</key>
+                            <string>admin</string>
+                        </dict>
+                    </array>
+                    <key>path</key>
+                    <string>%pathname%/Nextpad++ macOS/Nextpad++.app</string>
+                    <key>install_location</key>
+                    <string>/Applications</string>
+                </dict>
+            </dict>
+        </dict>
+    </array>
+</dict>
+</plist>
