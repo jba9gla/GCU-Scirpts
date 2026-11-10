@@ -1,0 +1,93 @@
+# Stream 2 - Generic Fresh Install (HP)
+## GCU IT Services
+
+Unattended Windows 11 Pro install for HP laptops. You build one master USB
+once, image it, and clone it to as many sticks as you need.
+
+**Warning:** booting any stick made from this wipes disk 0 with no prompt.
+Label the sticks.
+
+---
+
+## What it does
+
+- Wipes disk 0 and partitions it (EFI, MSR, Windows)
+- Creates local admin `admin` / `admin`, with a forced password change at first sign-in
+- Sets en-GB locale, keyboard and time zone
+- Applies Edge policies to hide the first-run and import prompts
+- Runs `PostInstall\postinstall.bat` from the USB at first logon:
+  - Renames the PC from the BIOS serial number
+  - Installs HP drivers with `pnputil`
+  - Installs .NET Framework 3.5 from `sources\sxs` on the USB
+  - Installs Chrome from the USB
+  - Restarts
+
+The language and keyboard screens at the start of Setup still appear.
+Choose English (United Kingdom).
+
+---
+
+## Build the master USB (once)
+
+1. Write the Windows ISO to a 32GB USB with Rufus. Cancel the
+   Windows User Experience dialog.
+2. Copy `autounattend.xml` to the USB root. Save it as UTF-8 without BOM.
+3. Create `PostInstall\` on the USB root and add:
+   - `postinstall.bat`
+   - `Chrome\ChromeStandaloneSetup64.exe`
+   - `Drivers\` containing the extracted HP driver pack
+4. Do not add a `$WinPEDriver$` folder. Setup loads it before partitioning,
+   and it was the likely cause of early Setup errors.
+
+```
+USB Root\
+├── autounattend.xml
+├── PostInstall\
+│   ├── postinstall.bat
+│   ├── Chrome\ChromeStandaloneSetup64.exe
+│   └── Drivers\            (extracted HP pack, subfolders as extracted)
+├── boot\
+├── efi\
+├── sources\
+└── setup.exe
+```
+
+HP driver pack for the EliteBook 8 G1i: sp174297. Extract it with
+`sp174297.exe /e /s /f "X:\PostInstall\Drivers"`, replacing `X:` with the
+USB drive letter.
+
+## Test the master
+
+1. Boot a spare HP laptop from the USB once via the boot menu.
+2. Leave the USB in until the desktop appears.
+3. Check `C:\Windows\Temp\postinstall.log` for each step.
+4. Check Device Manager for missing drivers, and `edge://policy` for the Edge policies.
+
+## Clone to more sticks
+
+Do this only after a clean test run.
+
+1. Read the master USB into an image with USBImager or Win32DiskImage.
+2. Write that image to each new stick. Each stick must be the same size or larger.
+3. Boot-test the first clone before making the rest.
+
+Do not commit the image. It contains the credentials and installers.
+
+## Update the build
+
+Edit the files on the master stick, retest, then re-image and re-clone. Do not
+edit the clones individually.
+
+---
+
+## Notes
+
+- The product key in the XML is Microsoft's generic Windows 11 Pro install key.
+  It selects the edition and does not activate Windows.
+- An ISO with `English` in its name, for example `SW_SE_Win_Pro_11_26H2_..._English_...`,
+  has en-US as its base language. The display language may stay English (US).
+- If Setup shows an edition picker, set the edition by name or index.
+- `pnputil` logs errors for drivers that don't match the hardware. That is normal.
+- Do not add `WillShowUI` under `SetupUILanguage` or `OSImage`.
+
+Maintained by: IT Services, Glasgow Caledonian University
