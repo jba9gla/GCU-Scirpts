@@ -1,0 +1,200 @@
+# HP laptop out-of-the-box setup
+## GCU IT Services
+https://github.com/jba9gla/GCU-Scirpts/tree/main
+Unattended Windows 11 Pro install for HP laptops that arrive without a GCU image.
+Build one master USB, test it, then clone it.
+
+**Warning:** booting from this USB wipes disk 0 with no prompt, including the HP
+recovery partition. Label the sticks.
+
+---
+
+## What it does
+
+Setup (answer file):
+- Wipes disk 0 and partitions it (EFI, MSR, Windows)
+- Creates two local accounts, both with passwords that never expire (see Accounts below):
+  - `GCUadmin`: administrator, used to run setup
+  - `User1`: standard user, for the person using the laptop
+- Signs in automatically as `GCUadmin` for the three setup parts
+- Sets en-GB locale, keyboard and time zone
+- Applies Edge policies to hide the first-run, sign-in, sync and import prompts
+- Runs `PostInstall\postinstall.bat` at first sign-in
+
+Post-install window (`postinstall.ps1`) runs in three parts with a restart between each.
+Leave the USB in until part 3 finishes.
+
+**Part 1: software and settings**
+1. Network check. If the laptop is offline, a pop-up asks for Ethernet.
+2. Set the computer name from the BIOS serial number
+3. Install Google Chrome (MSI)
+4. Set up Chrome and Edge:
+   - Chrome becomes the default browser (from the next sign-in)
+   - No first-run, sign-in, sync, import, profile or ad-privacy prompts in Chrome
+   - Home page and start-up page `https://www.gcu.ac.uk/` in Chrome and Edge
+5. Install AppsAnywhere (everything in `PostInstall\Apps`)
+6. Create desktop shortcuts: M365, Email, zScaler
+7. Install Windows updates (up to three passes)
+8. Restart
+
+**Part 2:** install HP drivers, then restart. Only drivers that match a device in the
+laptop are installed, which is much faster than installing the whole pack.
+
+**Part 3:** install HP drivers a second time to catch devices that only appear after
+the first pass, turn off automatic sign-in, then restart. Remove the USB when
+"Setup complete" shows.
+
+The language and keyboard screens at the start of Setup still appear.
+Choose English (United Kingdom).
+
+---
+
+## Repository contents
+
+```
+windows-unattended/
+├── autounattend.xml          answer file (passwords are placeholders)
+├── PostInstall/
+│   ├── postinstall.bat       starts the post-install window
+│   ├── postinstall.ps1       post-install window and all setup steps
+│   └── winupdate.ps1         Windows Update helper
+├── README.md
+└── .gitignore                keeps ISOs, installers and drivers out of the repo
+```
+
+Installers and driver packs are not stored here. Download them as listed under
+Requirements and add them to the USB.
+
+---
+
+## Requirements
+
+- Windows 11 ISO, written to a 32GB or larger USB with Rufus
+- Chrome enterprise MSI: `googlechromestandaloneenterprise64.msi`
+- AppsAnywhere installers from staffcluss:
+  - `apps-anywhere-installer-x64.msi` (AppsAnywhere client)
+  - `cloudpaging-player-setup-x64.msi` (Cloudpaging Player)
+- HP driver packs for each model:
+  - EliteBook 840 G8: sp142670
+  - EliteBook 8 G1i: sp174297
+- Ethernet (cable or dock) for the Windows updates step
+
+---
+
+## Build the master USB
+
+1. Write the Windows ISO with Rufus. Cancel the Windows User Experience dialog.
+2. Copy `autounattend.xml` to the USB root. Replace the `CHANGE_ME` passwords with the real ones (see Accounts). Save it as UTF-8 without BOM.
+3. Copy the `PostInstall` folder from this repo to the USB root, then add the installers and drivers shown below.
+4. Do not add a `$WinPEDriver$` folder at the root. It loads before partitioning and was a likely cause of early Setup errors.
+
+```
+USB Root\
+├── autounattend.xml
+├── PostInstall\
+│   ├── postinstall.bat
+│   ├── postinstall.ps1
+│   ├── winupdate.ps1
+│   ├── Chrome\
+│   │   └── googlechromestandaloneenterprise64.msi
+│   ├── Apps\
+│   │   ├── apps-anywhere-installer-x64.msi
+│   │   └── cloudpaging-player-setup-x64.msi
+│   └── Drivers\
+│       └── <model name>\     one folder per HP model
+├── boot\
+├── efi\
+├── sources\
+└── setup.exe
+```
+
+### Drivers
+
+Extract each pack into its own folder named exactly as Windows reports the model:
+
+```powershell
+(Get-CimInstance Win32_ComputerSystem).Model
+```
+
+```cmd
+sp142670.exe /e /s /f "X:\PostInstall\Drivers\HP EliteBook 840 G8 Notebook PC"
+```
+
+Replace `X:` with the USB drive letter. If no folder matches the model, the script
+checks every pack under `Drivers` and still installs only the drivers that match.
+
+### AppsAnywhere installers
+
+Copy both MSIs into `PostInstall\Apps` with the exact names above. They install
+silently in alphabetical order, so the client goes in before the player.
+For an EXE, add its exact filename and silent switch to `$exeSwitches` in
+`postinstall.ps1`. An EXE with no switch is skipped with a warning.
+
+If you test on a machine that already has the Cloudpaging Player, uninstall it and
+restart before reinstalling. The installer refuses to run while a restart is pending.
+
+---
+
+## Deploy
+
+1. Boot the laptop once from the USB through the boot menu.
+2. Select English (United Kingdom) on the language and keyboard screens.
+3. Plug in Ethernet if the pop-up asks.
+4. Leave the USB in. The laptop restarts and signs itself in twice more for the driver parts.
+5. Remove the USB when "Setup complete" shows. After the final restart, sign in as `User1`.
+
+If a part shows errors, it waits for you. Click **Restart now** to carry on to the
+next part, or **Close** to stop and check the log.
+
+## After deployment (manual)
+
+- **Security questions:** an answer file cannot set them. In Settings > Accounts > Sign-in options > Password, set the three questions (city you were born, city your parents met, first school attended).
+- **Windows updates:** a cumulative update often needs a restart before the next batch appears. Run Settings > Windows Update > Check for updates once more.
+- **Check:**
+  - `net user User1` and `net user GCUadmin` both show "Password expires: Never"
+  - `net localgroup Administrators` lists `GCUadmin` but not `User1`
+  - Settings > System > About shows the serial number as the device name
+  - Settings > Apps > Default apps shows Google Chrome as the browser
+  - `chrome://policy` and `edge://policy` list the GCU settings
+  - Chrome and Edge open on `www.gcu.ac.uk` with no sign-in prompt
+
+---
+
+## Accounts
+
+| Account | Type | Password in `autounattend.xml` | Expires |
+|---|---|---|---|
+| `GCUadmin` | Administrator | `CHANGE_ME_ADMIN` | Never |
+| `User1` | Standard user | `CHANGE_ME_USER` | Never |
+
+The real passwords are held by IT Services and are not stored in this repo.
+
+- `User1` cannot install software or change system settings. Use `GCUadmin` when Windows asks for an administrator.
+- Security questions are set on `User1`.
+- The `GCUadmin` password appears twice in `autounattend.xml`, under `LocalAccounts` and `AutoLogon`. Change both.
+- Never commit the USB copy of `autounattend.xml`. It holds the real passwords in plain text.
+
+---
+
+## Cloning
+
+Test one USB fully first. Then image it with USBImager and write that image to the other sticks.
+Test the first clone before making the rest. Do not commit the image.
+
+---
+
+## Notes
+
+- The product key in the XML is Microsoft's generic Windows 11 Pro installation key. It selects the edition and does not activate Windows.
+- Do not add `WillShowUI` under `SetupUILanguage` or `OSImage`. It was linked to Setup error `0x8007000D - 0x40029`.
+- If Setup says it cannot find a disk on an 840 G8, the Intel storage (RST/VMD) driver may be needed for Setup. This has not been seen on our hardware.
+- ISOs with `English` in the name use en-US as the base language, so the Windows display language may stay English (US).
+- Home page: Chrome and Edge only enforce home-page policies on domain-joined or enrolled devices. These laptops are neither, so the home page is set as a recommended policy and in each browser's first-run preferences. Users can change it.
+- Default browser: Windows reapplies Chrome as the default at every sign-in from `C:\ProgramData\GCUSetup\DefaultAssociations.xml`.
+- Drivers: the script reads each device's hardware IDs and installs only the INF files that list one of them. Part 3 skips anything part 2 already installed.
+- USB network adapters (USB-C Ethernet dongles, docks) are left on their current driver, so the connection is not dropped. The internal NIC and Wi-Fi are still updated.
+- If a device shows as unknown in Device Manager after setup, install the whole pack manually: `pnputil /add-driver "X:\PostInstall\Drivers\<model>\*.inf" /subdirs /install`
+- Setup progress is kept in `C:\ProgramData\GCUSetup\phase.txt`. A scheduled task, "GCU Setup - continue after restart", runs parts 2 and 3 and is removed at the end.
+- Logs: `C:\Windows\Temp\postinstall.log`
+
+Maintained by: IT Services, Glasgow Caledonian University
