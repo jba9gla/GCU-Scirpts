@@ -1,0 +1,56 @@
+# Wi-Fi Network Remover
+
+A Jamf Pro Self Service policy that lets standard (non-admin) users remove saved Wi-Fi networks from their Mac, without needing administrator rights.
+
+GCU-managed networks (`NGCU_Corporate` and anything else starting `NGCU_`) are protected and can't be removed with this tool. Users can remove `eduroam` and any networks they added themselves, such as a home network.
+
+## How it works
+
+1. Finds the Wi-Fi interface and the logged-in user.
+2. Lists saved networks with `networksetup -listpreferredwirelessnetworks` and hides any protected ones.
+3. Shows a picker to the user (swiftDialog, or AppleScript if swiftDialog isn't installed).
+4. Re-checks the chosen network against the protected list, then removes it with `networksetup -removepreferredwirelessnetwork`.
+5. Logs the result, shows a confirmation and runs `jamf recon`.
+
+The script runs as root from the Jamf policy, so no change to the macOS authorization database is needed.
+
+## Files
+
+| File | Purpose |
+| --- | --- |
+| `scripts/remove_wifi_network.sh` | Self Service policy script |
+| `scripts/ea_wifi_removal_log.sh` | Optional extension attribute that reports the last 5 log lines per Mac |
+
+## Protected networks
+
+Set at the top of `remove_wifi_network.sh`:
+
+```bash
+PROTECTED_PREFIXES=("NGCU_")   # any SSID starting with this is protected (case-insensitive)
+PROTECTED=()                    # exact-match SSIDs that are also protected
+```
+
+Protected networks never appear in the picker, and are refused (and logged) if somehow selected. eduroam is deliberately not protected.
+
+## Deployment
+
+1. Upload `remove_wifi_network.sh` to Jamf Pro (Settings > Computer Management > Scripts).
+2. Create a policy that runs the script. Set the trigger to Self Service only, scope it to a pilot group first, and add it to Self Service.
+3. Use this as the Self Service description:
+
+   > Remove a saved Wi-Fi network from your Mac without needing administrator rights. Select the network you no longer want to use and click Remove. Networks managed by GCU can't be removed and won't appear in the list.
+
+4. Optional: create a String extension attribute (input type Script) from `ea_wifi_removal_log.sh` to see recent removals per computer and build Smart Groups from them.
+5. Optional: deploy swiftDialog (`/usr/local/bin/dialog`) to the target Macs for the nicer dialogs.
+
+## Logging
+
+- Local log: `/var/log/remove_wifi_network.log` (Mac username, network name and outcome)
+- Jamf Pro: the same lines appear in the policy log, and `jamf recon` runs after any removal, failure or blocked attempt so the extension attribute is current.
+
+## Notes and limitations
+
+- Networks deployed by a Wi-Fi configuration profile are managed by that profile, so keep them in the protected list. Removing one may fail, or the profile may re-add it at the next check-in.
+- Only the saved network entry is removed. 802.1X identities and keychain items for a manually configured network, eduroam for example, may remain.
+- Test on your oldest and newest supported macOS versions before a wide rollout.
+- Run it as a standard user when testing, since the dialogs open in that user's session.
